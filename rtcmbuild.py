@@ -93,6 +93,7 @@ if __name__ == '__main__':
         print(row["Satellite"][0])
         if row['Satellite'][0] == 'G':
             data = create_datafield(row)
-            payload = df2payload(data)
-            msg = RTCMMessage(payload=payload)
-            print(f"\nmessage = {msg}")
+            if data is not None:
+                payload = df2payload(data)
+                msg = RTCMMessage(payload=payload)
+                print(f"\nmessage = {msg}")

@@ -46,27 +46,22 @@ def df2payload(datafields: list) -> bytes:
 
 def create_datafield(df):
     sat_id = int(df['Satellite'][1:])
-    if isinstance(df["P range"], dict):
-        L1_pseudorange = df["P range"].get(1)
-        L2_preudorange = df["P range"].get(2)
-    else:
-        L1_pseudorange = 0
-        L2_preudorange = 0
-    if isinstance(df["Phase"], dict):
-        L1_phaserange = df["Phase"].get(1)
-        L2_phaserange = df["Phase"].get(2)
-    else:
-        L1_phaserange = 0
-        L2_phaserange = 0
 
-    norm_data = [
-        ("DF011", L1_pseudorange), # нужно конвертировать в int
-        ("DF012", L1_phaserange - L1_pseudorange), # нужно конвертировать в int
-        ("DF017", L2_preudorange - L1_pseudorange),
-        ("DF018", L2_phaserange - L1_pseudorange),
-    ]
+    if not isinstance(df["P range"], dict):
+        return None
 
-    print(norm_data)
+    L1_pseudorange = df["P range"].get(1) / 100
+    L2_preudorange = df["P range"].get(2) / 100
+
+    if L1_pseudorange == 0 or L2_preudorange == 0:
+        return None
+
+    # if isinstance(df["Phase"], dict):
+    #     L1_phaserange = df["Phase"].get(1) / 1000
+    #     L2_phaserange = df["Phase"].get(2) / 1000
+    # else:
+    #     L1_phaserange = 0
+    #     L2_phaserange = 0
 
     data = [
         ("DF002", 1003),
@@ -79,12 +74,12 @@ def create_datafield(df):
 
         ("DF009", sat_id),
         ("DF010", 0),
-        ("DF011", int(L1_pseudorange // datascale('DF011'))), # нужно конвертировать в int
-        ("DF012", int((L1_phaserange - L1_pseudorange) // datascale('DF012'))), # нужно конвертировать в int
+        ("DF011", int(L1_pseudorange // (datascale('DF011')))),
+        ("DF012", 0), # нужно рассчитать phase range
         ("DF013", 0),
         ("DF016", 0),
         ("DF017", int((L2_preudorange - L1_pseudorange) // datascale('DF017'))),
-        ("DF018", int((L2_phaserange - L1_pseudorange) // datascale('DF018'))),
+        ("DF018", 0), # нужно рассчитать phase range
         ("DF019", 0),
     ]
 

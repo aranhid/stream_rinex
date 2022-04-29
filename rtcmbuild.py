@@ -29,7 +29,6 @@ def df2payload(datafields: list) -> bytes:
         value = val
         if value < 0:
             value = value + 2**datasiz(dfd)
-        print(f"{value:0{datasiz(dfd)}b}")
         bits += f"{value:0{datasiz(dfd)}b}"
     print(f"\nbitstream = {bits}")
 
@@ -85,37 +84,6 @@ def create_datafield(df):
 
     print(data)
     return data
-
-
-# data = [
-#     ("DF002", 1003),
-#     ("DF003", 0),
-#     ("DF004", 1),
-#     ("DF005", 1),
-#     ("DF006", 2),
-#     ("DF007", 0),
-#     ("DF008", 0),
-
-#     ("DF009", 5),
-#     ("DF010", 0),
-#     ("DF011", 1),
-#     ("DF012", 1),
-#     ("DF013", 0),
-#     ("DF016", 1),
-#     ("DF017", 1),
-#     ("DF018", 1),
-#     ("DF019", 0),
-
-#     ("DF009", 5),
-#     ("DF010", 0),
-#     ("DF011", 1),
-#     ("DF012", 1),
-#     ("DF013", 0),
-#     ("DF016", 1),
-#     ("DF017", 1),
-#     ("DF018", 1),
-#     ("DF019", 0),
-# ]
 
 
 if __name__ == '__main__':

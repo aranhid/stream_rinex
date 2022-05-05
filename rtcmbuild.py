@@ -1,13 +1,3 @@
-"""
-Example illustrating how to generate RTCM3 payloads from
-constituent datafields.
-
-Created on 14 Feb 2022
-
-:author: semuadmin
-:copyright: SEMU Consulting © 2022
-:license: BSD 3-Clause
-"""
 from datetime import timedelta
 import reader
 import pandas as pd
@@ -30,11 +20,9 @@ def df2payload(datafields: list) -> bytes:
         if value < 0:
             value = value + 2**datasiz(dfd)
         bits += f"{value:0{datasiz(dfd)}b}"
-    # print(f"\nbitstream = {bits}")
 
     # convert bit stream to octets
     octets = [f"0b{bits[i : i + 8]:0<8}" for i in range(0, len(bits), 8)]
-    # print(f"\noctets = {octets}")
 
     # convert octets to bytes
     pay = b""
@@ -45,14 +33,14 @@ def df2payload(datafields: list) -> bytes:
 def utctoweekseconds(utc,leapseconds):
     """ Returns the GPS week, the GPS day, and the seconds 
         and microseconds since the beginning of the GPS week """
-    import datetime, calendar
+    import datetime
     datetimeformat = "%Y-%m-%d %H:%M:%S"
     epoch = datetime.datetime.strptime("1980-01-06 00:00:00",datetimeformat)
-    tdiff = utc -epoch  + datetime.timedelta(seconds=(leapseconds - 19))
+    tdiff = utc - epoch  + datetime.timedelta(seconds=(leapseconds - 19))
     gpsweek = tdiff.days // 7 
-    gpsdays = tdiff.days - 7*gpsweek         
-    gpsseconds = tdiff.seconds + 86400* (tdiff.days -7*gpsweek)
-    return gpsweek,gpsdays,gpsseconds,tdiff.microseconds
+    gpsdays = tdiff.days - 7 * gpsweek         
+    gpsseconds = tdiff.seconds + 86400 * (tdiff.days - 7 * gpsweek)
+    return gpsseconds
 
 
 def create_datafield(df) -> list:
@@ -64,8 +52,8 @@ def create_datafield(df) -> list:
         return None
 
     timestamp = df['Timestamp'].to_pydatetime()
-    _, _, gpsseconds, _ = utctoweekseconds(timestamp, 37)
-    gpsms = gpsseconds * 1000
+    gpsseconds = utctoweekseconds(timestamp, 37)
+    gpsmsec = gpsseconds * 1000
 
     delimiter = 299792.46
 
@@ -87,7 +75,7 @@ def create_datafield(df) -> list:
         # Header
         ("DF002", 1004), # Message Number [UINT12]
         ("DF003", 0), # Reference Station ID [UINT12]
-        ("DF004", gpsms), # GPS Epoch Time (TOW) [UINT30]
+        ("DF004", gpsmsec), # GPS Epoch Time (TOW) [UINT30]
         ("DF005", 0), # Synchronous GNSS Message Flag [BIT1]
         ("DF006", 1), # No. of GPS Satellite Signals Processed [UINT5]
         ("DF007", 0), # GPS Divergencefree Smoothing Indicator [BIT1]
@@ -108,7 +96,6 @@ def create_datafield(df) -> list:
         ("DF020", 0) # GPS L2 CNR
     ]
 
-    # print(data)
     return data
 
 

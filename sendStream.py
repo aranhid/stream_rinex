@@ -4,15 +4,11 @@
 """
 
 import argparse
-import csv
 import base64
 import json
-from math import nan
 import math
-import sys
 import time
 from datetime import timedelta
-from dateutil.parser import parse
 from confluent_kafka import Producer
 import socket
 
@@ -49,16 +45,10 @@ def main():
     interval = timedelta(seconds=args.interval)
     common_gaps_df, working_df = get_dataframe(args.files, interval)
 
-    # rdr = csv.reader(open(args.filename))
-    # next(rdr)  # Skip header
-
     timestamps = working_df['Timestamp'].unique()
-    # print(timestamps)
 
     for timestamp in timestamps:
-        # print(timestamp)
         time_df = working_df[working_df['Timestamp'] == timestamp]
-        # print(time_df)
         for index, row in time_df.iterrows():
             if row['Satellite'][0] == 'G':
                 print(row)
@@ -80,35 +70,6 @@ def main():
                     
         producer.flush()
         time.sleep(interval.total_seconds())
-
-         # # line = working_df.loc[index]
-            # timestamp, value = row['Timestamp'], payload
-            # timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-            # # Convert csv columns to key value pair
-            # result = {}
-            # result[timestamp] = value
-            # # Convert dict to json as message format
-            # jresult = json.dumps(result)
-
-    # while True:
-
-    #     try:
-    #         line = working_df.loc[index]
-    #         index += 1
-    #         timestamp, value = line['Timestamp'], float(line['Phase tec'])
-    #         # Convert csv columns to key value pair
-    #         result = {}
-    #         result[timestamp] = value
-    #         # Convert dict to json as message format
-    #         jresult = json.dumps(result)
-
-    #         producer.produce(topic, key=p_key, value=jresult, callback=acked)
-    #         producer.flush()
-    #         time.sleep(interval.total_seconds())
-
-
-    #     except TypeError:
-    #         sys.exit()
 
 
 if __name__ == "__main__":

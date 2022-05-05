@@ -4,11 +4,26 @@
 """
 
 import argparse
+from datetime import datetime, timedelta
 import json
+import base64
 import sys
 import time
 import socket
+from pyrtcm import RTCMMessage
 from confluent_kafka import Consumer, KafkaError, KafkaException
+from gnss_tec import tec
+
+
+def gpsmsectotime(msec,leapseconds) -> datetime:
+    """ Returns the GPS week, the GPS day, and the seconds 
+        and microseconds since the beginning of the GPS week """
+    datetimeformat = "%Y-%m-%d %H:%M:%S"
+    epoch = datetime.strptime("1980-01-06 00:00:00",datetimeformat)
+    tdiff = datetime.utcnow() - epoch  + timedelta(seconds=(leapseconds - 19))
+    gpsweek = tdiff.days // 7 
+    t = epoch + timedelta(weeks=gpsweek) + timedelta(milliseconds=msec) - timedelta(seconds=(leapseconds - 19))
+    return t
 
 
 def msg_process(msg):
@@ -16,7 +31,31 @@ def msg_process(msg):
     time_start = time.strftime("%Y-%m-%d %H:%M:%S")
     val = msg.value()
     dval = json.loads(val)
-    print(time_start, dval)
+    # print(dval)
+    b64 = dval['bin_message']
+    message = base64.b64decode(b64.encode('utf-8'))
+    rtcm_msg = RTCMMessage(payload=message)
+    # print(f"message = {rtcm_msg}")
+    
+
+    if rtcm_msg.identity == '1004':
+        delimiter = 299792.46
+        sat_id = rtcm_msg.DF009_01
+        sat = f'G{sat_id:02}'
+        p_range_1 = rtcm_msg.DF011_01 + delimiter * rtcm_msg.DF014_01
+        p_range_2 = p_range_1 + rtcm_msg.DF017_01
+        t = tec.Tec(datetime.now(), 'GPS', sat)
+        t.p_range = {1: p_range_1, 2: p_range_2}
+        t.p_range_code = {1: 'C1C', 2: 'C2W'}
+        p_range_tec = t.p_range_tec
+        print(sat)
+        print(f'timestamp = {rtcm_msg.DF004}')
+        print(f'time = {gpsmsectotime(rtcm_msg.DF004, 37)}')
+        print(f'P range 1: original = {dval["P range 1"]}, rtcm = {p_range_1}')
+        print(f'P range 2: original = {dval["P range 2"]}, rtcm = {p_range_2}')
+        print(f'P range tec: original = {dval["P range tec"]}, rtcm = {p_range_tec}')
+    # dval = json.loads(val)
+    # print(time_start, dval)
 
 
 def main():

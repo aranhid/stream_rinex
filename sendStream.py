@@ -5,7 +5,10 @@
 
 import argparse
 import csv
+import base64
 import json
+from math import nan
+import math
 import sys
 import time
 from datetime import timedelta
@@ -14,6 +17,7 @@ from confluent_kafka import Producer
 import socket
 
 from reader import get_dataframe
+from rtcmbuild import create_payload
 
 
 def acked(err, msg):
@@ -47,21 +51,44 @@ def main():
 
     # rdr = csv.reader(open(args.filename))
     # next(rdr)  # Skip header
-    index = 0
 
-    for index, row in working_df.iterrows():
-        # line = working_df.loc[index]
-        timestamp, value = row['Timestamp'], float(row['Phase tec'])
-        timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-        # Convert csv columns to key value pair
-        result = {}
-        result[timestamp] = value
-        # Convert dict to json as message format
-        jresult = json.dumps(result)
+    timestamps = working_df['Timestamp'].unique()
+    # print(timestamps)
 
-        producer.produce(topic, key=p_key, value=jresult, callback=acked)
+    for timestamp in timestamps:
+        # print(timestamp)
+        time_df = working_df[working_df['Timestamp'] == timestamp]
+        # print(time_df)
+        for index, row in time_df.iterrows():
+            if row['Satellite'][0] == 'G':
+                print(row)
+                if not math.isnan(row['P range tec']):
+                    payload = create_payload(row)
+
+                    debug_json = {}
+                    debug_json['Timestamp'] = str(row['Timestamp'].to_pydatetime())
+                    debug_json['Satellite'] = row['Satellite']
+                    debug_json['P range tec'] = row['P range tec']
+                    debug_json['P range 1'] = row['P range'].get(1)
+                    debug_json['P range 2'] = row['P range'].get(2)
+                    debug_json['bin_message'] =  base64.b64encode(payload).decode("utf8")
+                
+                    jresult = json.dumps(debug_json)
+
+                    if payload is not None:
+                        producer.produce(topic, key=p_key, value=jresult, callback=acked)
+                    
         producer.flush()
         time.sleep(interval.total_seconds())
+
+         # # line = working_df.loc[index]
+            # timestamp, value = row['Timestamp'], payload
+            # timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+            # # Convert csv columns to key value pair
+            # result = {}
+            # result[timestamp] = value
+            # # Convert dict to json as message format
+            # jresult = json.dumps(result)
 
     # while True:
 

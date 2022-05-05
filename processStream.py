@@ -11,7 +11,7 @@ import sys
 import socket
 from pyrtcm import RTCMMessage
 from confluent_kafka import Consumer, KafkaError, KafkaException
-from gnss_tec import tec
+from gnss_tec import tec, gnss
 
 
 def gpsmsectotime(msec,leapseconds) -> datetime:
@@ -33,17 +33,31 @@ def msg_process(msg):
 
     if rtcm_msg.identity == '1004':
         delimiter = 299792.46
+        speed_of_light = 299792458
 
         sat_id = rtcm_msg.DF009_01
         sat = f'G{sat_id:02}'
 
         p_range_1 = rtcm_msg.DF011_01 + delimiter * rtcm_msg.DF014_01
         p_range_2 = p_range_1 + rtcm_msg.DF017_01
+
+        f1 = gnss.FREQUENCY.get('G').get(1)
+        f2 = gnss.FREQUENCY.get('G').get(2)
+
+        phase_range_1 = p_range_1 + rtcm_msg.DF012_01
+        phase_range_2 = p_range_1 + rtcm_msg.DF018_01
+
+        phase_1 = phase_range_1 / (speed_of_light / f1)
+        phase_2 = phase_range_2 / (speed_of_light / f2)
         
         t = tec.Tec(datetime.now(), 'GPS', sat)
         t.p_range = {1: p_range_1, 2: p_range_2}
         t.p_range_code = {1: 'C1C', 2: 'C2W'}
         p_range_tec = t.p_range_tec
+
+        t.phase = {1: phase_1, 2: phase_2}
+        t.phase_code = {1: 'L1C', 2: 'L2S'}
+        phase_tec = t.phase_tec
 
         print(sat)
         print(f'timestamp = {rtcm_msg.DF004}')
@@ -51,6 +65,9 @@ def msg_process(msg):
         print(f'P range 1: original = {dval["P range 1"]}, rtcm = {p_range_1}')
         print(f'P range 2: original = {dval["P range 2"]}, rtcm = {p_range_2}')
         print(f'P range tec: original = {dval["P range tec"]}, rtcm = {p_range_tec}')
+        print(f'Phase 1: original = {dval["Phase 1"]}, rtcm = {phase_1}')
+        print(f'Phase 2: original = {dval["Phase 2"]}, rtcm = {phase_2}')
+        print(f'Phase tec: original = {dval["Phase tec"]}, rtcm = {phase_tec}')
 
 
 def main():

@@ -51,8 +51,7 @@ def main():
         time_df = working_df[working_df['Timestamp'] == timestamp]
         for index, row in time_df.iterrows():
             if row['Satellite'][0] == 'G':
-                print(row)
-                if not math.isnan(row['P range tec']):
+                if not math.isnan(row['P range tec']) and not math.isnan(row['Phase tec']):
                     payload = create_payload(row)
 
                     debug_json = {}
@@ -61,6 +60,9 @@ def main():
                     debug_json['P range tec'] = row['P range tec']
                     debug_json['P range 1'] = row['P range'].get(1)
                     debug_json['P range 2'] = row['P range'].get(2)
+                    debug_json['Phase tec'] = row['Phase tec']
+                    debug_json['Phase 1'] = row['Phase'].get(1)
+                    debug_json['Phase 2'] = row['Phase'].get(2)
                     debug_json['bin_message'] =  base64.b64encode(payload).decode("utf8")
                 
                     jresult = json.dumps(debug_json)

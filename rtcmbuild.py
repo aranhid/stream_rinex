@@ -2,6 +2,7 @@ from datetime import timedelta
 import reader
 import pandas as pd
 from pyrtcm import RTCMMessage, datasiz, datascale
+from gnss_tec import gnss
 
 
 def df2payload(datafields: list) -> bytes:
@@ -56,20 +57,27 @@ def create_datafield(df) -> list:
     gpsmsec = gpsseconds * 1000
 
     delimiter = 299792.46
+    speed_of_light = 299792458
 
-    df014 =int(df["P range"].get(1) // delimiter)
-    L1_pseudorange = df["P range"].get(1) - df014 * delimiter
-    L2_preudorange = df["P range"].get(2) - df014 * delimiter
+    sat = df["Satellite"][0]
+    f1 = gnss.FREQUENCY.get(sat).get(int(df["Phase code"].get(1)[1]))
+    f2 = gnss.FREQUENCY.get(sat).get(int(df["Phase code"].get(2)[1]))
+
+    L1_phaserange = df["Phase"].get(1) * speed_of_light / f1
+    L2_phaserange = df["Phase"].get(2) * speed_of_light / f2
+
+    L1_pseudorange = df["P range"].get(1)
+    L2_preudorange = df["P range"].get(2)
+
+    df014 = int(df["P range"].get(1) // delimiter)
+    df011 = int((L1_pseudorange - df014*delimiter) // (datascale('DF011')))
+    df017 = int((L2_preudorange - L1_pseudorange) // datascale('DF017'))
+
+    df012 = int((L1_phaserange - L1_pseudorange) // datascale('DF012'))
+    df018 = int((L2_phaserange - L1_pseudorange) // datascale('DF018'))
 
     if L1_pseudorange == 0 or L2_preudorange == 0:
         return None
-
-    # if isinstance(df["Phase"], dict):
-    #     L1_phaserange = df["Phase"].get(1) / 1000
-    #     L2_phaserange = df["Phase"].get(2) / 1000
-    # else:
-    #     L1_phaserange = 0
-    #     L2_phaserange = 0
 
     data = [
         # Header
@@ -84,14 +92,14 @@ def create_datafield(df) -> list:
         # Signal
         ("DF009", sat_id), # GPS Satellite ID [UINT6]
         ("DF010", 0), # GPS L1 Code Indicator [BIT1]
-        ("DF011", int(L1_pseudorange // (datascale('DF011')))), # GPS L1 Pseudorange, in meters [UINT24]
-        ("DF012", 0), # GPS L1 PhaseRange - L1 Pseudorange, in meters [INT20], нужно рассчитать phase range
+        ("DF011", df011), # GPS L1 Pseudorange, in meters [UINT24]
+        ("DF012", df012), # GPS L1 PhaseRange - L1 Pseudorange, in meters [INT20]
         ("DF013", 0), # GPS L1 Lock Time Indicator [UINT7]
         ("DF014", df014), # GPS Integer L1 Pseudorange Modulus Ambiguity
         ("DF015", 0), # GPS L1 CNR
         ("DF016", 0), # GPS L2 Code Indicator [BIT2]
-        ("DF017", int((L2_preudorange - L1_pseudorange) // datascale('DF017'))), # GPS L2-L1 Pseudorange Difference [INT14]
-        ("DF018", 0), # GPS L2-L1 Pseudorange Difference, in meters [INT20], нужно рассчитать phase range
+        ("DF017", df017), # GPS L2-L1 Pseudorange Difference [INT14]
+        ("DF018", df018), # GPS GPS L2 PhaseRange - L1 Pseudorange, in meters [INT20]
         ("DF019", 0), # GPS L2 Lock Time Indicator [UINT7]
         ("DF020", 0) # GPS L2 CNR
     ]

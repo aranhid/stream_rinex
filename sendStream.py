@@ -37,6 +37,7 @@ def main():
 
     topic = args.topic
     p_key = args.files[0]
+    speed = args.speed
 
     conf = {'bootstrap.servers': "localhost:9092",
             'client.id': socket.gethostname()}
@@ -71,7 +72,7 @@ def main():
                         producer.produce(topic, key=p_key, value=jresult, callback=acked)
                     
         producer.flush()
-        time.sleep(interval.total_seconds())
+        time.sleep(interval.total_seconds() / speed)
 
 
 if __name__ == "__main__":

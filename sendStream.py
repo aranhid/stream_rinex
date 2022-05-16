@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Generates a stream to Kafka from a time series csv file.
+"""Generates a stream to Kafka from a RINEX file.
 """
 
 import argparse
@@ -25,14 +25,10 @@ def acked(err, msg):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('files', type=str, nargs='+', help='path to RINEX file')
-    parser.add_argument('interval', type=float,
-                            help='Time series csv file.')
-
-    parser.add_argument('topic', type=str,
-                        help='Name of the Kafka topic to stream.')
-    parser.add_argument('--speed', type=float, default=1, required=False,
-                        help='Speed up time series by a given multiplicative factor.')
+    parser.add_argument('files', type=str, nargs='+', help='path to RINEX file.')
+    parser.add_argument('interval', type=float, help='interval of RINEX file, in seconds.')
+    parser.add_argument('topic', type=str, help='Name of the Kafka topic to stream.')
+    parser.add_argument('--speed', type=float, default=1, required=False, help='Speed up time series by a given multiplicative factor.')
     args = parser.parse_args()
 
     topic = args.topic

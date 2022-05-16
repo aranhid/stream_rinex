@@ -69,7 +69,7 @@ def create_datafield(df) -> list:
     L1_pseudorange = df["P range"].get(1)
     L2_preudorange = df["P range"].get(2)
 
-    df014 = int(df["P range"].get(1) // delimiter)
+    df014 = int(L1_pseudorange // delimiter)
     df011 = int((L1_pseudorange - df014*delimiter) // (datascale('DF011')))
     df017 = int((L2_preudorange - L1_pseudorange) // datascale('DF017'))
 

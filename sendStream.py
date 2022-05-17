@@ -8,9 +8,10 @@ import base64
 import json
 import math
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta
 from confluent_kafka import Producer
 import socket
+import numpy as np
 
 from reader import get_dataframe
 from rtcmbuild import create_payload
@@ -29,11 +30,13 @@ def main():
     parser.add_argument('interval', type=float, help='interval of RINEX file, in seconds.')
     parser.add_argument('topic', type=str, help='Name of the Kafka topic to stream.')
     parser.add_argument('--speed', type=float, default=1, required=False, help='Speed up time series by a given multiplicative factor.')
+    parser.add_argument('--from-current-time', action='store_true', help='Send stream from current time.')
     args = parser.parse_args()
 
     topic = args.topic
     p_key = args.files[0]
     speed = args.speed
+    from_current_time = args.from_current_time
 
     conf = {'bootstrap.servers': "localhost:9092",
             'client.id': socket.gethostname()}
@@ -42,7 +45,15 @@ def main():
     interval = timedelta(seconds=args.interval)
     common_gaps_df, working_df = get_dataframe(args.files, interval)
 
-    timestamps = working_df['Timestamp'].unique()
+    timestamps = np.unique(working_df['Timestamp'].dt.to_pydatetime())
+
+    if from_current_time:
+        current_gps_time = datetime.utcnow()
+        timestamps = [ts for ts in timestamps if ts.time() >= current_gps_time.time()]
+        sec_to_sleep = timedelta(hours=timestamps[0].time().hour - current_gps_time.time().hour,
+                                 minutes=timestamps[0].time().minute - current_gps_time.time().minute,
+                                 seconds=timestamps[0].time().second - current_gps_time.time().second).seconds
+        time.sleep(sec_to_sleep)
 
     for timestamp in timestamps:
         time_df = working_df[working_df['Timestamp'] == timestamp]

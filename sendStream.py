@@ -43,7 +43,7 @@ def main():
     producer = Producer(conf)
 
     interval = timedelta(seconds=args.interval)
-    common_gaps_df, working_df = get_dataframe(args.files, interval)
+    working_df = get_dataframe(args.files, interval)
 
     timestamps = np.unique(working_df['Timestamp'].dt.to_pydatetime())
 

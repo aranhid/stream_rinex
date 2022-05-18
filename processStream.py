@@ -25,11 +25,12 @@ def gpsmsectotime(msec,leapseconds) -> datetime:
 
 def msg_process(msg):
     val = msg.value()
-    dval = json.loads(val)
+    # dval = json.loads(val)
 
-    base64_payload = dval['bin_message']
-    rtcm_payload = base64.b64decode(base64_payload.encode('utf-8'))
-    rtcm_msg = RTCMMessage(payload=rtcm_payload)
+    # base64_payload = dval['bin_message']
+    # rtcm_payload = base64.b64decode(base64_payload.encode('utf-8'))
+    # rtcm_msg = RTCMMessage(payload=rtcm_payload)
+    rtcm_msg = RTCMMessage(payload=val)
 
     if rtcm_msg.identity == '1004':
         delimiter = 299792.46
@@ -62,12 +63,21 @@ def msg_process(msg):
         print(sat)
         print(f'timestamp = {rtcm_msg.DF004}')
         print(f'time = {gpsmsectotime(rtcm_msg.DF004, 37)}')
-        print(f'P range 1: original = {dval["P range 1"]}, rtcm = {p_range_1}')
-        print(f'P range 2: original = {dval["P range 2"]}, rtcm = {p_range_2}')
-        print(f'P range tec: original = {dval["P range tec"]}, rtcm = {p_range_tec}')
-        print(f'Phase 1: original = {dval["Phase 1"]}, rtcm = {phase_1}')
-        print(f'Phase 2: original = {dval["Phase 2"]}, rtcm = {phase_2}')
-        print(f'Phase tec: original = {dval["Phase tec"]}, rtcm = {phase_tec}')
+        print(f'P range 1: {p_range_1}')
+        print(f'P range 2: {p_range_2}')
+        print(f'P range tec: {p_range_tec}')
+        print(f'Phase 1: {phase_1}')
+        print(f'Phase 2: {phase_2}')
+        print(f'Phase tec: {phase_tec}')
+        # print(sat)
+        # print(f'timestamp = {rtcm_msg.DF004}')
+        # print(f'time = {gpsmsectotime(rtcm_msg.DF004, 37)}')
+        # print(f'P range 1: original = {dval["P range 1"]}, rtcm = {p_range_1}')
+        # print(f'P range 2: original = {dval["P range 2"]}, rtcm = {p_range_2}')
+        # print(f'P range tec: original = {dval["P range tec"]}, rtcm = {p_range_tec}')
+        # print(f'Phase 1: original = {dval["Phase 1"]}, rtcm = {phase_1}')
+        # print(f'Phase 2: original = {dval["Phase 2"]}, rtcm = {phase_2}')
+        # print(f'Phase tec: original = {dval["Phase tec"]}, rtcm = {phase_tec}')
 
 
 def main():

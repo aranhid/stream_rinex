@@ -20,6 +20,34 @@ docker-compose --version
 ```
 docker-compose up
 ```
+## Python venv
+Обновление pip
+```
+python3 -m pip install --user --upgrade pip
+```
+```
+python3 -m pip --version
+```
+Установка virtualenv из pip
+```
+python3 -m pip install --user virtualenv
+```
+Создание виртуальной среды
+```
+python3 -m venv env
+```
+Активация виртуальной среды
+```
+source env/bin/activate
+```
+Проверка, где находится интерпретатор
+```
+which python
+```
+Деактивация виртуальной среды
+```
+deactivate
+```
 ## Запуск отправителя данных
 ```
 python sendStream.py ISTP125I.22O 30 localhost topic

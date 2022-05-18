@@ -54,5 +54,5 @@ python sendStream.py ISTP125I.22O 30 localhost topic
 ```
 ## Запуск получателя данных
 ```
-python processStream.py topic
+python processStream.py localhost topic
 ```

@@ -72,12 +72,14 @@ def msg_process(msg):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('topic', type=str,
-                        help='Name of the Kafka topic to stream.')
+    parser.add_argument('host', type=str, help='Host of the Kafka broker')
+    parser.add_argument('topic', type=str, help='Name of the Kafka topic to stream.')
 
     args = parser.parse_args()
 
-    conf = {'bootstrap.servers': 'localhost:9092',
+    host = args.host
+
+    conf = {'bootstrap.servers': f'{host}:9092',
             'default.topic.config': {'auto.offset.reset': 'smallest'},
             'group.id': socket.gethostname()}
 

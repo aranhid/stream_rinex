@@ -64,22 +64,25 @@ def main():
                 if row['Satellite'][0] == 'G':
                     if not math.isnan(row['P range tec']) and not math.isnan(row['Phase tec']):
                         payload = create_payload(row)
-
-                        debug_json = {}
-                        debug_json['Timestamp'] = str(row['Timestamp'].to_pydatetime())
-                        debug_json['Satellite'] = row['Satellite']
-                        debug_json['P range tec'] = row['P range tec']
-                        debug_json['P range 1'] = row['P range'].get(1)
-                        debug_json['P range 2'] = row['P range'].get(2)
-                        debug_json['Phase tec'] = row['Phase tec']
-                        debug_json['Phase 1'] = row['Phase'].get(1)
-                        debug_json['Phase 2'] = row['Phase'].get(2)
-                        debug_json['bin_message'] =  base64.b64encode(payload).decode("utf8")
-                    
-                        jresult = json.dumps(debug_json)
-
+                        
                         if payload is not None:
-                            producer.produce(topic, key=p_key, value=jresult, callback=acked)
+                            producer.produce(topic, key=p_key, value=payload, callback=acked)
+
+                        # debug_json = {}
+                        # debug_json['Timestamp'] = str(row['Timestamp'].to_pydatetime())
+                        # debug_json['Satellite'] = row['Satellite']
+                        # debug_json['P range tec'] = row['P range tec']
+                        # debug_json['P range 1'] = row['P range'].get(1)
+                        # debug_json['P range 2'] = row['P range'].get(2)
+                        # debug_json['Phase tec'] = row['Phase tec']
+                        # debug_json['Phase 1'] = row['Phase'].get(1)
+                        # debug_json['Phase 2'] = row['Phase'].get(2)
+                        # debug_json['bin_message'] =  base64.b64encode(payload).decode("utf8")
+                    
+                        # jresult = json.dumps(debug_json)
+
+                        # if payload is not None:
+                        #     producer.produce(topic, key=p_key, value=jresult, callback=acked)
                         
             producer.flush()
             time.sleep(interval.total_seconds() / speed)

@@ -1,4 +1,8 @@
 # Stream rinex
+## git clone
+```
+git clone https://token:glpat-Z58aBm5ns1-JmSbCXShh@git.iszf.irk.ru/vladislav_tsybulya/stream_rinex.git
+```
 ## Установка Docker compose
 Проверить последнюю версию на https://github.com/docker/compose/releases (на момент написания v2.5.1)
 ```
@@ -14,11 +18,11 @@ docker-compose --version
 ```
 ## Запуск брокера Kafka
 ```
-docker compose up
+docker-compose up
 ```
 ## Запуск отправителя данных
 ```
-python sendStream.py ISTP125I.22O 30 topic
+python sendStream.py ISTP125I.22O 30 localhost topic
 ```
 ## Запуск получателя данных
 ```

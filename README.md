@@ -16,6 +16,12 @@ sudo chmod +x /usr/local/bin/docker-compose
 ```
 docker-compose --version
 ```
+## Настройка брокера
+В файле docker-composer.yml необходмо в строке
+```
+KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092
+```
+localhost заменить на адрес брокера.
 ## Запуск брокера Kafka
 ```
 docker-compose up

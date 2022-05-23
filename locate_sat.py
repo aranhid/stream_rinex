@@ -3,7 +3,6 @@ from coordinates import satellite_xyz
 from datetime import datetime, timedelta
 import argparse
 import numpy as np
-import matplotlib.pyplot as plt
 
 from coord import xyz_to_el_az, lle_to_xyz, cart_to_lle
 

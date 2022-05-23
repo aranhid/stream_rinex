@@ -3,15 +3,13 @@
 """Generates a stream to Kafka from a RINEX file.
 """
 
-import argparse
-import base64
-import json
 import math
 import time
-from datetime import datetime, timedelta
-from confluent_kafka import Producer
 import socket
+import argparse
 import numpy as np
+from confluent_kafka import Producer
+from datetime import datetime, timedelta
 
 from reader import get_dataframe
 from rtcmbuild import create_payload
@@ -34,6 +32,7 @@ def main():
     parser.add_argument('--from-current-time', action='store_true', help='Send stream from current time.')
     args = parser.parse_args()
 
+    interval = timedelta(seconds=args.interval)
     host = args.host
     topic = args.topic
     p_key = args.files[0]
@@ -45,7 +44,6 @@ def main():
                 'client.id': socket.gethostname()}
         producer = Producer(conf)
 
-        interval = timedelta(seconds=args.interval)
         working_df = get_dataframe(args.files, interval)
 
         timestamps = np.unique(working_df['Timestamp'].dt.to_pydatetime())
@@ -59,30 +57,14 @@ def main():
             time.sleep(sec_to_sleep)
 
         for timestamp in timestamps:
+            print(timestamp)
             time_df = working_df[working_df['Timestamp'] == timestamp]
             for index, row in time_df.iterrows():
                 if row['Satellite'][0] == 'G':
                     if not math.isnan(row['P range tec']) and not math.isnan(row['Phase tec']):
                         payload = create_payload(row)
-                        
                         if payload is not None:
                             producer.produce(topic, key=p_key, value=payload, callback=acked)
-
-                        # debug_json = {}
-                        # debug_json['Timestamp'] = str(row['Timestamp'].to_pydatetime())
-                        # debug_json['Satellite'] = row['Satellite']
-                        # debug_json['P range tec'] = row['P range tec']
-                        # debug_json['P range 1'] = row['P range'].get(1)
-                        # debug_json['P range 2'] = row['P range'].get(2)
-                        # debug_json['Phase tec'] = row['Phase tec']
-                        # debug_json['Phase 1'] = row['Phase'].get(1)
-                        # debug_json['Phase 2'] = row['Phase'].get(2)
-                        # debug_json['bin_message'] =  base64.b64encode(payload).decode("utf8")
-                    
-                        # jresult = json.dumps(debug_json)
-
-                        # if payload is not None:
-                        #     producer.produce(topic, key=p_key, value=jresult, callback=acked)
                         
             producer.flush()
             time.sleep(interval.total_seconds() / speed)
